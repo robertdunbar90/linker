@@ -13,6 +13,9 @@ def get_actors_from_films_string(films):
         s += str(film[0]) + ', '
     return s[:-2] + ');'
 
+def get_actors_from_film_string(film_id):
+    return "SELECT actor_id FROM ActorFilm WHERE film_id = " + str(film_id) + ";"
+
 def get_films_from_actor_string(actor_id):
     return "SELECT film_id FROM ActorFilm WHERE actor_id = " + str(actor_id) + ";"
 
@@ -29,26 +32,70 @@ def get_colleagues(cursor, actor_id, depth):
 
     while depth > 0:
         current = queue.get()
-        costars = get_costars(cursor, current[-1])
-        for costar in costars:
-            if costar[0] not in already_seen:
-                new = current + costar
-                queue.put(new)
-                already_seen.add(costar[0])
+        film_string = get_films_from_actor_string(current[-1])
+        cursor.execute(film_string)
+        films = cursor.fetchall()
+        for film in films:
+            actor_string = get_actors_from_film_string(film[0])
+            cursor.execute(actor_string)
+            actors = cursor.fetchall()
+            for actor in actors:
+                if actor[0] not in already_seen:
+                    new = current + film + actor
+                    queue.put(new)
+                    already_seen.add(actor[0])
         depth -= 1
+
+def get_link(cursor, actor_id, target_id):
+    already_seen.add(actor_id)
+    queue.put((actor_id,))
+
+    while not queue.empty():
+        current = queue.get()
+        film_string = get_films_from_actor_string(current[-1])
+        cursor.execute(film_string)
+        films = cursor.fetchall()
+        for film in films:
+            actor_string = get_actors_from_film_string(film[0])
+            cursor.execute(actor_string)
+            actors = cursor.fetchall()
+            for actor in actors:
+                if actor[0] not in already_seen:
+                    new = current + film + actor
+                    if actor[0] == target_id:
+                        return new
+                    queue.put(new)
+                    already_seen.add(actor[0])
 
 
 
 with con:
     cursor = con.cursor()
-    cursor.execute("SELECT id FROM Actors WHERE name = 'Arnold Schwarzenegger';")
+    cursor.execute("SELECT id FROM Actors WHERE name = 'Benedict Cumberbatch';")
     actor_id = cursor.fetchone()[0]
-    get_colleagues(cursor, actor_id, 50)
+    cursor.execute("SELECT id FROM Actors WHERE name = 'Quentin Tarantino';")
+    target_id = cursor.fetchone()[0]
+    # get_colleagues(cursor, actor_id, 15)
 
-    while not queue.empty():
-        our_string = ''
-        item = queue.get()
-        for i in item:
-            cursor.execute("SELECT name FROM Actors WHERE id = ?;", (i,))
-            our_string += ' - ' + repr(cursor.fetchone()[0])
-        print our_string
+    link = get_link(cursor, actor_id, target_id)
+
+    if link == None:
+        print 'Fail!'
+    else:
+        for i, v in enumerate(link):
+            if i % 2 == 0:  
+                cursor.execute("SELECT name FROM Actors WHERE id = ?;", (v,))
+            else:
+                cursor.execute("SELECT name FROM Films WHERE id = ?;", (v,))
+            print cursor.fetchone()[0]
+
+    # while not queue.empty():
+    #     our_string = ''
+    #     item = queue.get()
+    #     for index, value in enumerate(item):
+    #         if index % 2 == 0:
+    #             cursor.execute("SELECT name FROM Actors WHERE id = ?;", (value,))
+    #         else:
+    #             cursor.execute("SELECT name FROM Films WHERE id = ?;", (value,))
+    #         our_string += ' - ' + repr(cursor.fetchone()[0])
+    #     print our_string
