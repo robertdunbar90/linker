@@ -87,7 +87,7 @@ def get_actor(name, address):
 
 
 
-while page_number < 50:
+while page_number < 100:
     r = requests.get(url + str(page_number))
 
     text = r.text
