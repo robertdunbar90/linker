@@ -7,7 +7,7 @@ import sqlite3, sys
 url = 'http://www.imdb.com/search/name?gender=male,female&start='
 base_url = 'http://www.imdb.com/'
 
-page_number = 1
+page_number = 501
 
 actors = []
 
@@ -88,9 +88,30 @@ def get_actor(name, address):
     print
     actors.append(currect_actor)
 
+bo_url_start = 'http://www.boxofficemojo.com/people/?view=Actor&pagenum='
+bo_url_end = '&sort=sumgross&order=DESC&&p=.htm'
+
+page = 1
+
+targets = set()
+
+while page < 10:
+    r = requests.get(bo_url_start + str(page) + bo_url_end)
+    text = r.text
+
+    index = text.find('<td><font size="2"><a href=')
+
+    while index != -1:
+        start = text.find('<b>', index)
+        end = text.find('</b>', start)
+        name = text[start+3:end]
+        targets.add(name)
+        index = text.find('<td><font size="2"><a href=', start)
+
+    page += 1
 
 
-while page_number < 500:
+while page_number < 1000:
     r = requests.get(url + str(page_number))
 
     text = r.text
@@ -103,18 +124,19 @@ while page_number < 500:
         end = text.find('</a>', start)
         actor = text[start:end]
         name = actor[actor.find('>')+1:]
-        address_start = actor.find('nm')
-        address_end = actor.find('/', address_start)
-        address = actor[address_start:address_end]
-        get_actor(name, address)
+        if name in targets:
+            print 'found', name
+            targets.remove(name)
+            address_start = actor.find('nm')
+            address_end = actor.find('/', address_start)
+            address = actor[address_start:address_end]
+            get_actor(name, address)
         index = text.find('<td class="name">', index+1)
         # index = -1
 
 
     print
     page_number += 50
-
-con = None
 
 print
 print 'database time!'
