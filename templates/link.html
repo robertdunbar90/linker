@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<head>
+	<header><title>Linker</title></header>
+</head>
+<body>
+	<h1>Linker</h1>
+	<br>
+	<ul>
+	{% for item in link %}
+		<li>
+		{% if loop.index0%2 == 0 %}
+			{{ item }}
+		{% else %}
+			Starred in {{ item }}
+		{% endif %}
+		</li>
+	{% endfor %}
+	</ul>
+</body>

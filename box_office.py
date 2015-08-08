@@ -7,7 +7,7 @@ import sqlite3, sys
 url = 'http://www.imdb.com/search/name?gender=male,female&start='
 base_url = 'http://www.imdb.com/'
 
-page_number = 501
+page_number = 1001
 
 actors = []
 
@@ -111,7 +111,7 @@ while page < 10:
     page += 1
 
 
-while page_number < 1000:
+while page_number < 2000:
     r = requests.get(url + str(page_number))
 
     text = r.text
@@ -124,9 +124,10 @@ while page_number < 1000:
         end = text.find('</a>', start)
         actor = text[start:end]
         name = actor[actor.find('>')+1:]
-        if name in targets:
+        if page_number < 300 or name in targets:
             print 'found', name
-            targets.remove(name)
+            if name in targets:
+                targets.remove(name)
             address_start = actor.find('nm')
             address_end = actor.find('/', address_start)
             address = actor[address_start:address_end]
@@ -178,3 +179,8 @@ except sqlite3.Error, e:
 finally:
     if con:
         con.close()
+
+leftovers = list(targets)
+
+for l in leftovers:
+    print repr(l)
