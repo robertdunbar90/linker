@@ -9,7 +9,8 @@ def get_films_from_actor_string(actor_id):
 
 def get_films_and_costars_string(actor_id):
     start = "SELECT ActorFilm.film_id, pair.actor_id FROM ActorFilm JOIN ActorFilm pair ON ActorFilm.film_id = pair.film_id WHERE ActorFilm.actor_id = "
-    return start + str(actor_id) + ";"
+    end = " GROUP BY pair.actor_id ORDER BY ActorFilm.id DESC;"
+    return start + str(actor_id) + end
 
 def get_link(cursor, actor_id, target_id):
     already_seen = set()
@@ -75,7 +76,7 @@ def find_link(actor, target):
 
         return link
 
-link = find_link("Tom Cruise", "Cara")
+# link = find_link("Tom Cruise", "Cara")
 
-for i in link:
-    print i
+# for i in link:
+#     print i
