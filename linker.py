@@ -7,6 +7,10 @@ def get_actors_from_film_string(film_id):
 def get_films_from_actor_string(actor_id):
     return "SELECT film_id FROM ActorFilm WHERE actor_id = " + str(actor_id) + " ORDER BY id DESC;"
 
+def get_films_and_costars_string(actor_id):
+    start = "SELECT ActorFilm.film_id, pair.actor_id FROM ActorFilm JOIN ActorFilm pair ON ActorFilm.film_id = pair.film_id WHERE ActorFilm.actor_id = "
+    return start + str(actor_id) + ";"
+
 def get_link(cursor, actor_id, target_id):
     already_seen = set()
     queue = Queue.Queue()
@@ -16,20 +20,16 @@ def get_link(cursor, actor_id, target_id):
 
     while not queue.empty():
         current = queue.get()
-        film_string = get_films_from_actor_string(current[-1])
-        cursor.execute(film_string)
-        films = cursor.fetchall()
-        for film in films:
-            actor_string = get_actors_from_film_string(film[0])
-            cursor.execute(actor_string)
-            actors = cursor.fetchall()
-            for actor in actors:
-                if actor[0] not in already_seen:
-                    new = current + film + actor
-                    if actor[0] == target_id:
-                        return new
-                    queue.put(new)
-                    already_seen.add(actor[0])
+        film_and_costars_string = get_films_and_costars_string(current[-1])
+        cursor.execute(film_and_costars_string)
+        links = cursor.fetchall()
+        for link in links:
+            if link[1] not in already_seen:
+                new = current + link
+                if link[1] == target_id:
+                    return new
+                queue.put(new)
+                already_seen.add(link[1])
 
 def get_actor_from_id(cursor, actor_id):
     cursor.execute("SELECT name FROM Actors WHERE id = ?;", (actor_id,))
@@ -74,3 +74,8 @@ def find_link(actor, target):
         link = turn_link_to_names(cursor, link)
 
         return link
+
+link = find_link("Tom Cruise", "Cara")
+
+for i in link:
+    print i
