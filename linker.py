@@ -5,7 +5,7 @@ def get_actors_from_film_string(film_id):
     return "SELECT actor_id FROM ActorFilm WHERE film_id = " + str(film_id) + ";"
 
 def get_films_from_actor_string(actor_id):
-    return "SELECT film_id FROM ActorFilm WHERE actor_id = " + str(actor_id) + ";"
+    return "SELECT film_id FROM ActorFilm WHERE actor_id = " + str(actor_id) + " ORDER BY id DESC;"
 
 def get_link(cursor, actor_id, target_id):
     already_seen = set()
